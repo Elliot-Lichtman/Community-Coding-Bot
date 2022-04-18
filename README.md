@@ -33,7 +33,7 @@ Current Filters/Responses:
  - if it thinks you might need help it reminds you to use !help
 
 Python Bullying Detection
- - >:(
+ - \>:(
 
 
 
