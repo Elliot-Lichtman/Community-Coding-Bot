@@ -1,54 +1,48 @@
-DISCORD DEBUGGER
+General Idea:
 
-Current Commands: 
-!syntax —> provides basic info about syntax + link to oracle
- - ArrayList
- - HashMap
- - TreeSet
- - Linked List
+This bot aims to provide an easy way for people to work together on CS projects while staying within the bounds of the honor code. 
 
-!help
- - uses embeds + messages
- - accesses dictionary
+The bot stores a database of errors people have encountered (see Bug Submission) in a way that’s easy to access for the community. It will provide a means for people to more easily discover the errors in their code, giving them a list of potential bugs related to a specified method that have caused problems for other people. It will not, however, provide the solution to these bugs – that is for the user to figure out on their own. 
 
-!setup —> ADMIN ONLY
- - adds a method to the dictionary
+To make sure the bot stays within the honor code, several precautions have been put in place. Bug submissions are regulated by admin who have the power to approve/deny bugs before they go to the database. Furthermore, these admin can edit and remove existing bugs ane methods. In addition to all this, the bot will contain code that scans all messages sent on the server for signs of copy pastable code (semicolons, if{}, etc.) and censor messages it thinks violate the honor code.
 
-!bug —> ADMIN ONLY
- - adds a bug to a method
-
-!editName —> ADMIN ONLY
- - edits the name of a method in the dictionary
-
-!editBug —> ADMIN ONLY 
- - edits a bug in the dictionary
-
-!info
- - explains the bot!
+In this docs, you may have noticed that a few things are highlighted in red. That is because they haven’t been implemented yet. However everything can and will happen eventually.
 
 
-Current Filters/Responses:
+Bug Submission
 
- Help Message
- - if it thinks you might need help it reminds you to use !help
+Admin:
 
-Python Bullying Detection
- - \>:(
+Admin can submit any bug in any channel using the !bug command
+Their messages will be color coded gold
+They will also be able to edit both bugs and method names using !editName and !editBug
+
+Normal Users
+
+To add a bug, non-admin users will have to go through the following process through direct messages with the bot:
+
+1) Normal bug submission input. Same as admin except it is coded BLUE so that it is easy to differentiate
+
+
+2) The bug will be sent to an admin channel in the larger server that only admins/mods have access to. Here, the teachers/admins can use emojis (naturally placed by the bot) to indicate whether or not the bug should be added.
+
+3) The person who submitted the bug gets a friendly notification telling them either that their bug was approved or that it won’t be added
+
+4) Bugs that got approved will be added to the database while bugs that got denied will not be added.
+
+Helpful Features 
+
+!help - This method is the core of the bot. The user uses reactions to indicate which method they want help on and the bot gives them a list of probable bugs.
+
+!syntax - This method provides a faster way for students to access (cue spooky music) THE DOCS. In addition to linking people to the java oracle docs, this function will provide some basic information about the desired data structure including constructor syntax, common methods, and big O for some crucial tasks.
 
 
 
-FEATURES TO BE ADDED:
 
-Buttons for smooth UI!
 
-!question —> pings a group of mods in a separate channel with a question from a student. This will also provide an option for the admins to log the question in the database!
+Question and Answer
 
-!respond —> offers a mod/admin a list of unanswered questions and lets them respond to the question. This will also let admins log the question in the database
+To spare your and my eyes, I will not be highlighting this entire page red. However. None of it has been finished yet.
 
-!editQuesiton/!editResponse —> ADMIN ONLY. Do I need to explain these ones?
+In addition to logging bugs, this bot will have a feature to save questions and responses students have about certain methods. There will be a !question command that allows the user to submit a question to a public Q&A channel. Anyone will be able to respond to the question, however admin will have the power to use the !respond command. This command will allow the admin to select which question they are responding to and save both the question and their answer to the database where other people can access it. 
 
-Copy Paste detection/censorship —> I need to do my research on the muxus bot
-
-Admin updates —> at a specified time each day, send a message with a status report on 1) the database and 2) how many people used the bot
-
-!censorBug —> basically the same as !editBug except it just removes it from the database. 
