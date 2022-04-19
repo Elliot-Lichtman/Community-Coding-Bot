@@ -36,7 +36,8 @@ async def on_ready():
 waiting = False
 authorName = ""
 settingUp = False
-admin = ["Noman#8525", "dragonstout#1047"]
+admin = ["Noman#85256", "dragonstout#1047"]
+adminID = [616811056588914750, 0]
 addingBug = False
 toAppend = ""
 appendingBug = False
@@ -47,11 +48,69 @@ changingBug = False
 editingBug = False
 finalStep = False
 bugNum = 0
+currentHelp = 0
+adminChannel = client.get_channel(965784293156716614)
+helpedCounter = 0
+waitingReview = []
 
+
+@client.event
+async def on_raw_reaction_add(payload):
+  global currentHelp
+  global adminChannel
+  global helpedCounter
+  global waitingReview
+
+  if payload.user_id == 965411622518652968:
+    return
+  
+  messageID = payload.message_id
+  print(payload)
+  if messageID == currentHelp:
+    currentHelp = 0
+    counter = 1
+    emojis = ["zero", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+    embed=discord.Embed(title="Bugs:", color=discord.Color.blue())
+    print(emojis.index(str(payload.emoji.name)))
+    for methodName in methodsDict.keys():
+      if counter == emojis.index(str(payload.emoji.name)):
+        print("YES")
+        for bug in methodsDict[methodName]:
+          embed.add_field(name=":beetle:", value=bug, inline=False)
+      counter += 1
+    channel = client.get_channel(payload.channel_id)
+    print(channel)
+    await channel.send(embed = embed)
+    """user = await client.fetch_user(adminID[0])
+    print(user)
+    await user.send(embed = embed)"""
+    helpedCounter += 1
+
+  for message in waitingReview:
+    if message[0] == payload.message_id:
+      user = await client.fetch_user(message[3])
+      if payload.emoji.name == "✅":
+        try: 
+          methodsDict[message[1]].append(message[2])
+        except:
+          methodsDict[message[1]] = [message[2]]
+        embed=discord.Embed(title="Congrats! Your bug was accepted!", color=discord.Color.blue())
+        await user.send(embed = embed)
+        embed=discord.Embed(title="Bug approved!", color=discord.Color.gold())
+        await adminChannel.send(embed = embed)
+        
+      else:
+        embed=discord.Embed(title="Uh oh... Your bug was declined. Thanks anyways though!", color=discord.Color.red())
+        await user.send(embed = embed)
+        embed=discord.Embed(title="Bug denied!", color=discord.Color.gold())
+        await adminChannel.send(embed = embed)
+      
+    
 
 # when a message is sent...
 @client.event
 async def on_message(message):
+  global adminChannel
   global authorName
   global waiting
   global settingUp
@@ -65,13 +124,14 @@ async def on_message(message):
   global editingBug
   global finalStep
   global bugNum
+  global currentHelp
   
   # we don't want to respond to our own messages! That's a bug waiting to happen
   if message.author == client.user:
     return
 
   if message.content.startswith('!source') and str(message.author) in admin:
-    embed=discord.Embed(title="Source Code", url = "https://replit.com/@ElliotLichtman/DnD-Bot#main.py",  color=discord.Color.gold())
+    embed=discord.Embed(title="Source Code", url = "https://github.com/AlwaysUsePython/Community-Coding-Bot/tree/main",  color=discord.Color.gold())
     await message.channel.send(embed = embed)
   
   if any(word in message.content for word in needsHelp):
@@ -117,6 +177,36 @@ async def on_message(message):
     embed=discord.Embed(title="Congratulations "+ str(message.author) + ".\nYou are admin because you are clearly very wise.", color=discord.Color.gold())
     await message.channel.send(embed = embed)"""
 
+  if appendingBug and str(message.author) not in admin:
+    adminChannel = client.get_channel(965784293156716614)
+    print("hello", adminChannel)
+    appendingBug = False
+    embed=discord.Embed(title="Bug Submission From "+ str(message.author), color=discord.Color.gold())
+    embed.add_field(name="Method Name", value=toAppend, inline=False)
+    embed.add_field(name="New Bug", value=message.content, inline=False)
+    adminMessage = await adminChannel.send(embed = embed)
+    await adminMessage.add_reaction("✅")
+    await adminMessage.add_reaction("❌")
+    waitingReview.append([adminMessage.id, toAppend, message.content, message.author.id])
+    embed=discord.Embed(title="Bug submitted for review", color=discord.Color.blue())
+    await message.channel.send(embed = embed)
+    print(methodsDict)
+  
+  if addingBug and str(message.author) not in admin:
+    toAppend = message.content
+    addingBug = False
+    appendingBug = True
+    authorName = admin
+    embed=discord.Embed(title="You have selected " + toAppend + "\nWhat is the bug?", color=discord.Color.blue())
+    await message.channel.send(embed = embed)
+    
+  if message.content.startswith('!bug') and str(message.author) not in admin:
+    embed=discord.Embed(title="Type the name of the method:", color=discord.Color.blue())
+    await message.channel.send(embed = embed)
+    authorName = message.author
+    addingBug = True
+
+  
   if appendingBug and str(message.author) in admin:
     appendingBug = False
     try:
@@ -141,7 +231,7 @@ async def on_message(message):
     authorName = message.author
     addingBug = True
     
-  # basically gives them which thing they want
+  """# basically gives them which thing they want
   if waiting and message.author == authorName:
     embed=discord.Embed(title="Bugs:", color=discord.Color.blue())
     waiting = False
@@ -153,7 +243,7 @@ async def on_message(message):
           embed.add_field(name=":beetle:", value=bug, inline=False)
       counter += 1
       
-    await message.channel.send(embed = embed)
+    await message.channel.send(embed = embed)"""
   
   # This will let them search the database!
   if message.content.startswith('!help'):
@@ -164,9 +254,16 @@ async def on_message(message):
       embed.add_field(name=words[counter] + " " + methodName, value=str(len(methodsDict[methodName])) + " errors logged", inline=False)
      
       counter += 1
+        
     waiting = True
     authorName = message.author
-    await message.channel.send(embed = embed)
+    compMessage = await message.channel.send(embed = embed)
+    currentHelp = compMessage.id
+    emojis = ["zero", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+    for i in range(counter):
+      if i != 0:
+        print(emojis[i])
+        await compMessage.add_reaction(emojis[i])
 
   # basically gives them which thing they want to edit
   if finalStep and message.author == authorName:
@@ -281,6 +378,7 @@ async def on_message(message):
     print(methodsDict)
 
   if message.content.startswith('!setup') and str(message.author) in admin:
+    print(message.author.id)
     embed=discord.Embed(title="What is the new method called?", color=discord.Color.gold())
     await message.channel.send(embed = embed)
     authorName = message.author
