@@ -1,32 +1,14 @@
 import os
 import discord
+import random
 from keep_alive import keep_alive
 
 TOKEN = os.environ['TOKEN']
 
 client = discord.Client()
 
+# this is pre-loaded with a test database for debugging purposes until the code is actually launched
 methodsDict = {'beginGame()': ['array = otherArray is a nono'], 'makeGuess()': ['double counting letters!!', "when you are updating your possible list/tree/hashThingy, if you are using a for each loop, don't delete inside the for each loop. It will recognize that the indexes all got shifted and freak out and crash."], 'isAllowable()': ["you didn't add the solutions to your allowable guesses in the constructor!", 'check your reset function. Mr Stout wrote his tester so that it resets before testing isAllowable()'], 'constructor': ["make sure you add the possible solutions to your possible guesses list --> it's counter intuitive, but wordle doesn't do that naturally"], 'toString()': ["it doesn't exist lol"], 'numGuesses()': [], 'numRemaining()': ['check your isAllowable function and wherever you update your possibleSolutions list (probably makeGuess?)']}
-
-# filter out python slander (mean statements courtesy of Isaac)
-illegal = [
-"python bad", 
-"python is bad", 
-"python sucks", 
-"python shit", 
-"python terrible",
-"python awful",
-"python worse than java",
-"python simply bad",
-"python very bad",
-"python atrocious",
-"python a monstrosity", 
-"python is shit", #this one is courtesy of eric yoon :D
-"PYTHON SUCKS"
-]
-
-# detect when someone is dying
-needsHelp = ["dropping", "sad", "stuck", "need help", "having trouble", "nightmare", "need some help"]
 
 # start the code
 @client.event
@@ -52,6 +34,18 @@ currentHelp = 0
 adminChannel = client.get_channel(965784293156716614)
 helpedCounter = 0
 waitingReview = []
+waitingForQuote = False
+quoteAuthor = ""
+pendingBugs = []
+
+#stout quotes
+stoutImages = ['StoutQuoteImages/StoutQuote1.png', 'StoutQuoteImages/StoutQuote2.png', 'StoutQuoteImages/StoutQuote3.png', 'StoutQuoteImages/StoutQuote4.png', 'StoutQuoteImages/StoutQuote5.png']
+
+# filter out python slander (mean statements courtesy of Isaac)
+illegal = ["bad", "bad", "sucks", "terrible","awful","worse","atrocious","monstrosity", "SUCKS", "java is better","worst", "BAD", "SUCKS", "TERRIBLE","AWFUL","WORSE", "shit","ATROCIOUS","SHIT","MONSTROSITY","hate", "HATE","screw","SCREW","gross","GROSS","ew","EW", "fortnite player","english enjoyer","mono red","doodoo","DOODOO","abysmal","ABYSMAL"]
+
+# detect when someone is dying
+needsHelp = ["dropping", "insane", "sad", "stuck", "need help", "having trouble", "nightmare", "need some help", "not working", "hell"]
 
 
 @client.event
@@ -66,10 +60,10 @@ async def on_raw_reaction_add(payload):
   
   messageID = payload.message_id
   print(payload)
-  if messageID == currentHelp:
+  emojis = ["zero", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+  if messageID == currentHelp and payload.emoji.name in emojis:
     currentHelp = 0
     counter = 1
-    emojis = ["zero", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
     embed=discord.Embed(title="Bugs:", color=discord.Color.blue())
     print(emojis.index(str(payload.emoji.name)))
     for methodName in methodsDict.keys():
@@ -104,6 +98,7 @@ async def on_raw_reaction_add(payload):
         await user.send(embed = embed)
         embed=discord.Embed(title="Bug denied!", color=discord.Color.gold())
         await adminChannel.send(embed = embed)
+      waitingReview.remove(message)
       
     
 
@@ -125,11 +120,34 @@ async def on_message(message):
   global finalStep
   global bugNum
   global currentHelp
-  
+  global stoutQuotes
+  global waitingForQuote
+  global quoteAuthor
+  global pendingBugs
   # we don't want to respond to our own messages! That's a bug waiting to happen
   if message.author == client.user:
     return
 
+  if any (word in message.content for word in ["public", "if", "int", "String", "try", "new", "for (", "{", "return", "while", "\n"]):
+    if ";" in message.content:
+      censorString = ""
+      counter = 0
+      for letter in message.content:
+        if counter % 3 == 0:
+          censorString += "🟥"
+        if letter == "\n":
+          censorString += "🟥\n"
+          counter = 0
+        counter += 1
+      await message.delete()
+      try:
+        embed=discord.Embed(title=censorString + "\nThis message has been censored because it looked like it could contain code. Friendly reminder to make sure you don't copy paste!",   color=discord.Color.red())
+        await message.channel.send(embed = embed)
+      except:
+        await message.channel.send("***This message has been censored because it looked like it could contain code. Friendly reminder to make sure you don't copy paste!***")
+        await message.channel.send(censorString)
+  
+  
   if message.content.startswith('!source') and str(message.author) in admin:
     embed=discord.Embed(title="Source Code", url = "https://github.com/AlwaysUsePython/Community-Coding-Bot/tree/main",  color=discord.Color.gold())
     await message.channel.send(embed = embed)
@@ -138,6 +156,25 @@ async def on_message(message):
     embed=discord.Embed(title="Sounds like you need some help! Remember: if you type !help, I'll try my best! :thumbsup:", color=discord.Color.blue())
     await message.channel.send(embed = embed)
 
+  if message.content.startswith('!stout'):
+    randomNum = random.randint(0, len(stoutImages)-1)
+    print(randomNum)
+    picture = discord.File(stoutImages[randomNum])
+    await message.channel.send(file=picture)
+
+  if waitingForQuote and message.author == quoteAuthor:
+    stoutQuotes.append(message.content)
+    embed=discord.Embed(title="Thanks for your submission!", color=discord.Color.blue())
+    print(stoutQuotes)
+    waitingForQuote = False
+    await message.channel.send(embed=embed)
+  
+  if message.content.startswith('!addStoutQuote'):
+    embed=discord.Embed(title="Type your Stout quote!", color=discord.Color.blue())
+    waitingForQuote = True
+    quoteAuthor = message.author
+    await message.channel.send(embed=embed)
+  
   if message.content.startswith('!syntax'):
     if any(word in message.content for word in ["ArrayList", "arrayList", "array list", "Array List", "arraylist"]):
       embed=discord.Embed(title="ArrayList", url = "https://docs.oracle.com/javase/7/docs/api/java/util/ArrayList.html",  color=discord.Color.green())
@@ -177,59 +214,79 @@ async def on_message(message):
     embed=discord.Embed(title="Congratulations "+ str(message.author) + ".\nYou are admin because you are clearly very wise.", color=discord.Color.gold())
     await message.channel.send(embed = embed)"""
 
-  if appendingBug and str(message.author) not in admin:
-    adminChannel = client.get_channel(965784293156716614)
-    print("hello", adminChannel)
-    appendingBug = False
-    embed=discord.Embed(title="Bug Submission From "+ str(message.author), color=discord.Color.gold())
-    embed.add_field(name="Method Name", value=toAppend, inline=False)
-    embed.add_field(name="New Bug", value=message.content, inline=False)
-    adminMessage = await adminChannel.send(embed = embed)
-    await adminMessage.add_reaction("✅")
-    await adminMessage.add_reaction("❌")
-    waitingReview.append([adminMessage.id, toAppend, message.content, message.author.id])
-    embed=discord.Embed(title="Bug submitted for review", color=discord.Color.blue())
-    await message.channel.send(embed = embed)
-    print(methodsDict)
-  
-  if addingBug and str(message.author) not in admin:
-    toAppend = message.content
-    addingBug = False
-    appendingBug = True
-    authorName = admin
-    embed=discord.Embed(title="You have selected " + toAppend + "\nWhat is the bug?", color=discord.Color.blue())
-    await message.channel.send(embed = embed)
+  if str(message.author) not in admin:
+    for i in range(len(pendingBugs)):
+      if pendingBugs[i][0] == message.channel.id and pendingBugs[i][2]:
+        print(pendingBugs[i])
+        adminChannel = client.get_channel(965784293156716614)
+        embed=discord.Embed(title="Bug Submission From "+ str(message.author), color=discord.Color.gold())
+        embed.add_field(name="Method Name", value=pendingBugs[i][3], inline=False)
+        embed.add_field(name="New Bug", value=message.content, inline=False)
+        adminMessage = await adminChannel.send(embed = embed)
+        await adminMessage.add_reaction("✅")
+        await adminMessage.add_reaction("❌")
+        waitingReview.append([adminMessage.id, pendingBugs[i][3], message.content, message.author.id])
+        embed=discord.Embed(title="Bug submitted for review", color=discord.Color.blue())
+        await message.channel.send(embed = embed)
+        print(methodsDict)
+        del pendingBugs[i]
+        print(pendingBugs)
+  if str(message.author) not in admin:
+    for i in range(len(pendingBugs)):
+      if pendingBugs[i][0] == message.channel.id and pendingBugs[i][1]:
+        print("match")
+        pendingBugs[i].append(message.content)
+        pendingBugs[i][1] = False
+        pendingBugs[i][2] = True
+        authorName = admin
+        embed=discord.Embed(title="You have selected " + message.content + "\nWhat is the bug?", color=discord.Color.blue())
+        await message.channel.send(embed = embed)
     
   if message.content.startswith('!bug') and str(message.author) not in admin:
+    try:
+      await message.delete()
+      embed=discord.Embed(title=":red_square::red_square::red_square: Please use dm's to add bugs to the database! This is for honor code reasons because we want to give Mr. Stout a chance to censor bugs before they become public!",   color=discord.Color.red())
+      await message.channel.send(embed = embed)
+      return
+    except:
+      pass
     embed=discord.Embed(title="Type the name of the method:", color=discord.Color.blue())
     await message.channel.send(embed = embed)
     authorName = message.author
-    addingBug = True
+    pendingBugs.append([message.channel.id, True, False])
+    print(pendingBugs)
 
   
   if appendingBug and str(message.author) in admin:
-    appendingBug = False
-    try:
-      methodsDict[toAppend].append(message.content)
-    except:
-      methodsDict[toAppend] = [message.content]
-    embed=discord.Embed(title="Bug added", color=discord.Color.gold())
-    await message.channel.send(embed = embed)
-    print(methodsDict)
+    for i in range(len(pendingBugs)):
+      if pendingBugs[i][0] == message.channel.id:
+        appendingBug = False
+        try:
+          methodsDict[pendingBugs[i][1]].append(message.content)
+        except:
+          methodsDict[pendingBugs[i][1]] = [message.content]
+        embed=discord.Embed(title="Bug added", color=discord.Color.gold())
+        await message.channel.send(embed = embed)
+        print(methodsDict)
+        break
   
   if addingBug and str(message.author) in admin:
-    toAppend = message.content
-    addingBug = False
-    appendingBug = True
-    authorName = admin
-    embed=discord.Embed(title="You have selected " + toAppend + "\nWhat is the bug?", color=discord.Color.gold())
-    await message.channel.send(embed = embed)
+    for i in range(len(pendingBugs)):
+      if pendingBugs[i][0] == message.channel.id:
+        pendingBugs[i].append(message.content)
+        addingBug = False
+        appendingBug = True
+        authorName = admin
+        embed=discord.Embed(title="You have selected " + pendingBugs[i][1] + "\nWhat is the bug?", color=discord.Color.gold())
+        await message.channel.send(embed = embed)
+        break
     
   if message.content.startswith('!bug') and str(message.author) in admin:
     embed=discord.Embed(title="Type the name of the method:", color=discord.Color.gold())
     await message.channel.send(embed = embed)
     authorName = message.author
     addingBug = True
+    pendingBugs.append([message.channel.id])
     
   """# basically gives them which thing they want
   if waiting and message.author == authorName:
@@ -384,9 +441,10 @@ async def on_message(message):
     authorName = message.author
     settingUp = True
 
-  if any(word in message.content for word in illegal):
-    embed=discord.Embed(title=":octagonal_sign: WARNING: Python slander is not tolerated :snake:",     color=discord.Color.red())
-    await message.channel.send(embed = embed)
+  if any (word in message.content for word in ["python", "Python", "PYTHON"]):
+    if any(word in message.content for word in illegal):
+      embed=discord.Embed(title=":octagonal_sign: WARNING: Python slander is not tolerated :snake:",     color=discord.Color.red())
+      await message.channel.send(embed = embed)
 
   
 keep_alive()
