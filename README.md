@@ -6,9 +6,6 @@ The bot stores a database of errors people have encountered (see Bug Submission)
 
 To make sure the bot stays within the honor code, several precautions have been put in place. Bug submissions are regulated by admin who have the power to approve/deny bugs before they go to the database. Furthermore, these admin can edit and remove existing bugs ane methods. In addition to all this, the bot will contain code that scans all messages sent on the server for signs of copy pastable code (semicolons, if{}, etc.) and censor messages it thinks violate the honor code.
 
-In this docs, you may have noticed that a few things are highlighted in red. That is because they haven’t been implemented yet. However everything can and will happen eventually.
-
-
 Bug Submission
 
 Admin:
@@ -36,13 +33,9 @@ Helpful Features
 
 !syntax - This method provides a faster way for students to access (cue spooky music) THE DOCS. In addition to linking people to the java oracle docs, this function will provide some basic information about the desired data structure including constructor syntax, common methods, and big O for some crucial tasks.
 
-
-
-
-
 Question and Answer
 
-To spare your and my eyes, I will not be highlighting this entire page red. However. None of it has been finished yet.
+In addition to logging bugs, this bot will have a feature to save questions and responses students have about certain methods. There is an !ask command that allows the user to anonymously submit a question to a public Q&A channel. Anyone will be able to respond to the question, however admin will have the power to use the !respond command. This command will allow the admin to select which question they are responding to and isolate the answer in a separate #responses channel. The person who submitted the question will also be notified. 
 
-In addition to logging bugs, this bot will have a feature to save questions and responses students have about certain methods. There will be a !question command that allows the user to submit a question to a public Q&A channel. Anyone will be able to respond to the question, however admin will have the power to use the !respond command. This command will allow the admin to select which question they are responding to and save both the question and their answer to the database where other people can access it. 
+Why do this instead of just use a normal chat? Well, this is just a nice way to make sure that 1) a teacher's answer doesn't get buried by conversation and 2) students can submit questions anonymously instead of using a group chat.
 
